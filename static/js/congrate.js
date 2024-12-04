@@ -78,7 +78,7 @@ function renderQuestions(questions) {
 }
 
 // URL de l'API
-const apiUrl_interview = 'http://127.0.0.1:8000/api/evaluation/endpoint/interview';
+const apiUrl_interview = 'https://lastestdeploy.onrender.com/api/evaluation/endpoint/interview';
 
 // Récupérer les données et les afficher
 fetchQuizData(apiUrl_interview).then(questions => {
@@ -152,7 +152,7 @@ function renderCalculerScore(scores) {
 
 
 // URL de l'API
-const url_calculer_scores = 'http://127.0.0.1:8000/api/calculer-scores';
+const url_calculer_scores = 'https://lastestdeploy.onrender.com/api/calculer-scores';
 
 // Récupérer les données et les afficher
 document.addEventListener("DOMContentLoaded", function () {
@@ -187,7 +187,7 @@ function startTimer(maxValue) {
 
 
 
-const url_InfoInter = 'http://127.0.0.1:8000/api/InfoInter';
+const url_InfoInter = 'https://lastestdeploy.onrender.com/api/InfoInter';
 // Récupérer les données et les afficher
 document.addEventListener("DOMContentLoaded", function () {
     fetchQuizData3(url_InfoInter ).then(scores => {
@@ -254,7 +254,7 @@ async function fetchQuizData3(apiUrl) {
 
 
 
-const apiUrl3 = 'http://127.0.0.1:8000/api/evaluation/quiz/feed/endpoint';
+const apiUrl3 = 'https://lastestdeploy.onrender.com/api/evaluation/quiz/feed/endpoint';
 
 // Récupérer les données et les afficher
 fetchQuizData(apiUrl3).then(questions => {

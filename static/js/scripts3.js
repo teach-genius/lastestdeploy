@@ -23,7 +23,7 @@ function sendDataToAPI() {
 
     // Redirection après succès
     try {
-        window.location.href = "http://127.0.0.1:8000/next";
+        window.location.href = "https://lastestdeploy.onrender.com/next";
     } catch (error) {
         console.error("Erreur lors de la redirection :", error);
         alert("Une erreur est survenue lors de la redirection. Veuillez vérifier l'URL.");

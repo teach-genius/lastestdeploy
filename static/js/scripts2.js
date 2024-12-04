@@ -97,7 +97,7 @@ if (!window.SpeechRecognition) {
                 texts.appendChild(questionElement);
 
                 try {
-                    const response = await fetch("http://127.0.0.1:8000/endpoint", {
+                    const response = await fetch("https://lastestdeploy.onrender.com/endpoint", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ query: currentQuestion }),
@@ -204,7 +204,7 @@ if (!window.SpeechRecognition) {
 
     async function startProcess() {
         try {
-            const response = await fetch("http://127.0.0.1:8000/endpoint", {
+            const response = await fetch("https://lastestdeploy.onrender.com/endpoint", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ query: "None" }),
@@ -336,7 +336,7 @@ function finalizeProcess() {
     }
 
     // Redirection vers la page de félicitations
-    window.location.href = "http://127.0.0.1:8000/congrate";
+    window.location.href = "https://lastestdeploy.onrender.com/congrate";
 }
 
 // Associe le clic sur le bouton "Finish" à la fonction finalizeProcess
@@ -354,7 +354,7 @@ async function sendEndTime2(time) {
     console.log("Temps restant envoyé :", endTimeData); // Debug
 
     // URL de l'API pour enregistrer le temps de fin
-    const apiUrl = "http://127.0.0.1:8000/api/quiz/save-end-time_interview";
+    const apiUrl = "https://lastestdeploy.onrender.com/api/quiz/save-end-time_interview";
 
     try {
         // Effectuer la requête POST

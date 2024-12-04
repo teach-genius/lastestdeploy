@@ -13,7 +13,7 @@ async function loadQuestions() {
     const name_company = localStorage.getItem("name_company");
 
     // URL de l'API
-    const apiUrl = 'http://127.0.0.1:8000/api/quiz/endpoint';
+    const apiUrl = 'https://lastestdeploy.onrender.com/api/quiz/endpoint';
 
     // Vérification si les données nécessaires existent
     if (!title || !description || !name_company) {
@@ -202,7 +202,7 @@ function saveCandidateAnswer(question, candidateAnswer, correctAnswer) {
     console.log("Réponse sauvegardée :", answerData); // Pour vérifier dans la console
 
     // Si vous voulez envoyer à une API
-    const apiUrl = "http://127.0.0.1:8000/api/quiz/save-answer"; // URL de l'API pour enregistrer les réponses
+    const apiUrl = "https://lastestdeploy.onrender.com/api/quiz/save-answer"; // URL de l'API pour enregistrer les réponses
 
     fetch(apiUrl, {
         method: "POST",
@@ -238,7 +238,7 @@ async function sendEndTime(time) {
     console.log("Temps restant envoyé :", endTimeData); // Debug
 
     // URL de l'API pour enregistrer le temps de fin
-    const apiUrl = "http://127.0.0.1:8000/api/quiz/save-end-time";
+    const apiUrl = "https://lastestdeploy.onrender.com/api/quiz/save-end-time";
 
     try {
         // Effectuer la requête POST
