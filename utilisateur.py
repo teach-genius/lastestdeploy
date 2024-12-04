@@ -33,25 +33,13 @@ class CandidateData:
         except (FileNotFoundError, json.JSONDecodeError):
             self.save_to_file(filename)
 
-    def add_question_interview(self, question, response, path_file="infos_user.json"):
-        """
-        Ajouter une question et une réponse à l'interview.
-
-        :param question: La question posée au candidat.
-        :param response: La réponse du candidat.
-        :param path_file: Le chemin du fichier JSON où les données seront sauvegardées.
-        """
-        # Vérifier si la réponse est valide
-        if response is not None and str(response).lower() != "null":
-            # Ajouter la question et la réponse à la liste des questions d'interview
-            self.data["interview"]["questions"].append({
-                "question": question,
-                "response": response  # Correction du nom de clé : uniformisation avec "response"
-            })
-
-            # Sauvegarder les modifications dans le fichier
-            self.save_to_file(path_file)
-        
+    def add_question_interview(self, question, response):
+        """Ajouter une question et une réponse à l'interview."""
+        self.data["interview"]["questions"].append({
+            "question": question,
+            "reponse_candidat": response
+        })
+        self.save_to_file(path_file)
 
     def saveinterview(self):
         """Sauvegarder les questions de l'interview loggées."""
@@ -84,29 +72,15 @@ class CandidateData:
         self.save_to_file(path_file)
 
     def add_evaluation(self, context, score, feedback, improvements):
-        """
-        Ajouter une évaluation au test ou à l'interview.
-
-        :param context: Le contexte ('test_quiz' ou 'interview').
-        :param score: Le score attribué.
-        :param feedback: Feedback sur la performance.
-        :param improvements: Liste des améliorations clés (doit contenir 3 éléments).
-        """
-        if len(improvements) != 3:
-            raise ValueError("Improvements doit contenir exactement 3 éléments.")
-        
+        """Ajouter une évaluation au test ou à l'interview."""
         if context not in ["test_quiz", "interview"]:
             raise ValueError("Le contexte doit être 'test_quiz' ou 'interview'.")
-        
-        evaluation = {
+        self.data[context]["evaluations"].append({
             "Score": score,
             "Feedback": feedback,
             "Key Improvements": improvements
-        }
-        
-        self.data[context]["evaluations"].append(evaluation)
+        })
         self.save_to_file(path_file)
-
 
     def calculer_et_stocker_score(self):
         """Calculer le score du quiz et le stocker."""
@@ -253,59 +227,54 @@ class CandidateData:
             return None
 
     def get_evaluations(self):
-        """
-        Récupérer les évaluations associées à chaque question d'interview.
-
-        :return: Liste de dictionnaires contenant les détails des évaluations.
-        """
-        input_data = self.load_json()
+        input_data=self.load_json()
         evaluations = []
         
+        # Extraire les questions et évaluations de l'entretien
         interview_questions = input_data["interview"]["questions"]
         evaluations_data = input_data["interview"]["evaluations"]
         
+        # Itération sur les questions et évaluations
         for idx, (question_data, evaluation_data) in enumerate(zip(interview_questions, evaluations_data)):
             evaluation = {
-                "id": idx + 1,
-                "question": question_data["question"],
-                "response": question_data["response"],
-                "Score": evaluation_data["Score"],
-                "Feedback": evaluation_data["Feedback"],
-                "Key Improvements": evaluation_data["Key Improvements"]
+                "id": idx + 1,  # ID basé sur l'index
+                "question": question_data["question"],  # La question posée
+                "reponse_candidat": question_data["reponse_candidat"],  # La réponse du candidat
+                "Score": evaluation_data[0]["Score"],  # Le score
+                "Feedback": evaluation_data[0]["Feedback"],  # Le feedback
+                "KeyImprovements": evaluation_data[0]["Key Improvements"]  # Les améliorations suggérées
             }
             evaluations.append(evaluation)
-        
         return evaluations
-
             
     def calculer_scores(self):
-        """
-        Calculer les scores combinés du quiz et de l'entretien.
-
-        :return: Un dictionnaire contenant les scores globaux, du quiz et de l'entretien.
-        """
-        input_data = self.load_json()
-        scores_entretien = input_data["interview"]["evaluations"]
-        score_quiz = input_data["test_quiz"]["evaluations"]["pourcentage"]
+        input_data=self.load_json()
+        # Récupération des scores de l'entretien et du quiz
+        scores_entretien = input_data['interview']['evaluations']
+        score_quiz = input_data['test_quiz']['evaluations']['pourcentage']
         
+        # Calcul de la moyenne des scores d'entretien
         total_scores_entretien = 0
         total_questions_entretien = len(scores_entretien)
         
         for evaluation in scores_entretien:
-            score = int(evaluation["Score"])
+            score = int(evaluation[0]["Score"].split("/")[0])  # On récupère la première partie du score (avant le '/')
             total_scores_entretien += score
         
-        moyenne_entretien = (total_scores_entretien / (total_questions_entretien * 10)) * 100 if total_questions_entretien else 0
+        # Calcul de la moyenne des scores de l'entretien en pourcentage
+        moyenne_entretien = (total_scores_entretien / (total_questions_entretien * 10)) * 100  # Total maximum de 10 points par question
+        
+        # Calcul de la moyenne générale entre le quiz et l'entretien
         moyenne_generale = (moyenne_entretien + score_quiz) / 2
         
+        # Création du dictionnaire de résultat
         resultats = {
-            "general_pourcentage": round(moyenne_generale, 2),
-            "quiz_pourcentage": round(score_quiz, 2),
-            "evaluation_pourcentage": round(moyenne_entretien, 2)
+            "general_pourcentage": int(moyenne_generale),
+            "quiz_pourcentage": score_quiz,
+            "evaluation_pourcentage": moyenne_entretien
         }
         
         return resultats
-
         
 
 
