@@ -7,7 +7,7 @@ path_file = "infos_user.json"
 
 
 class CandidateData:
-    def __init__(self, role="olanda", interviewer="farya"):
+    def __init__(self, role="", interviewer=""):
         self.interview_log = []
         self.data = {
             "candidat": {"role": role, "interviewer": interviewer},
