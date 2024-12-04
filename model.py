@@ -8,12 +8,14 @@ from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 import re
 from langchain_community.llms import HuggingFaceHub
-
+job_title = None
 class Modele:
     def __init__(self):
-        self.job = None
         self.description = None
         self.company = None
+        self.job_title= None
+        self.job= None
+        
         
         self.interviewer = None
         self.response = None
@@ -22,7 +24,9 @@ class Modele:
         self.memory=ConversationBufferMemory()
         
     def add_infos_job(self,job_title, job_description, company_name):
-        self.job = job_title
+        self.job_title= job_title
+        self.job= job_title
+        job_title = job_title
         self.description = job_description
         self.company = company_name
     
