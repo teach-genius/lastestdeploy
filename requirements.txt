@@ -1,10 +1,13 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 sqlalchemy
-psycopg2
+psycopg2-binary
 rapidfuzz
 google-generativeai
 langchain
 langchain-google-genai
 python-dotenv
+langchain_community
+huggingface_hub
+

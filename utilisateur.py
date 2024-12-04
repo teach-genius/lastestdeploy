@@ -1,18 +1,21 @@
 import json
 from datetime import datetime
+from typing import List, Dict
+
+
 path_file = "infos_user.json"
 
 
 class CandidateData:
-    def __init__(self):
+    def __init__(self, role="olanda", interviewer="farya"):
         self.interview_log = []
         self.data = {
-            "candidat": {"role":"", "interviewer":""},
+            "candidat": {"role": role, "interviewer": interviewer},
             "job": {"titre": "", "description": "", "campagne": ""},
             "test_quiz": {
                 "questions": [],
                 "temps_fin_test": "",
-                "evaluations": []  
+                "evaluations": []  # Évaluations liées au test/quiz
             },
             "interview": {
                 "questions": [],
@@ -61,6 +64,11 @@ class CandidateData:
     def set_test_completion_time(self, temps_fin=None):
         """Ajouter le temps de fin du test."""
         self.data["test_quiz"]["temps_fin_test"] = temps_fin or datetime.utcnow().isoformat()
+        self.save_to_file(path_file)
+
+    def set_interview_completion_time(self, temps_fin=None):
+        """Ajouter le temps de fin de l'interview."""
+        self.data["interview"]["temps_fin_interview"] = temps_fin or datetime.utcnow().isoformat()
         self.save_to_file(path_file)
 
     def add_evaluation(self, context, score, feedback, improvements):

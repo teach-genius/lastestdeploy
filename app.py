@@ -8,62 +8,17 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from utilisateur import CandidateData
 from model import Modele
-
-# Modèle pour la requête
-class CommandRequest(BaseModel):
-    query: str  # La réponse ou question du candidat
-
-class Evaluation(BaseModel):
-    id: int
-    question: str
-    reponse_candidat: str
-    Score: str
-    Feedback: str
-    KeyImprovements: List[str]
-
-class CalculerScoresResponse(BaseModel):
-    general_pourcentage: int
-    quiz_pourcentage: float
-    evaluation_pourcentage: float
-
-class InfoInter(BaseModel):
-    role_job: str
-    interviewer: str
-
-class Question(BaseModel):
-    question: str
-    reponse_candidat: str
-    bonne_reponse: str
-
-# Modèle pour valider les données entrantes
-class InterviewerChoice(BaseModel):
-    interviewer_number: str # Numéro de l'intervieweur
-
-class TimeData(BaseModel):
-    remaining_time: int
-
-class TimeData2(BaseModel):
-    remaining_time: str
-
-# Modèle Pydantic pour valider les données reçues
-class QuizAnswer(BaseModel):
-    question: str
-    reponse_candidat: str
-    bonne_reponse: str
-
-# Modèle de la requête pour recevoir les données
-class JobQuery(BaseModel):
-    title: str
-    description: str
-    name_company: str   
-
+import os
 
 # Initialisation de l'application FastAPI
 app = FastAPI()
-# Chemin relatif pour atteindre le dossier App/static depuis le fichier main.py
-static_dir = "static"
-# Monter le dossier 'App/static' comme serveur de fichiers statiques
+
+# Utilise un chemin absolu pour éviter des erreurs de chemin relatif
+static_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+
+# Monter le dossier static
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 # Configuration CORS
 app.add_middleware(
     CORSMiddleware,
@@ -72,17 +27,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-chat = Modele()
-Candidat = CandidateData() 
 
-# Endpoint pour récupérer les évaluations
-@app.get("/api/evaluation/endpoint/interview", response_model=List[Evaluation])
-async def get_evaluations_interview():
-    evaluations=Candidat.get_evaluations()
-    print(evaluations)
-    if not evaluations:
-        raise HTTPException(status_code=404, detail="Aucune évaluation disponible.")
-    return evaluations
+chat = Modele()
+Candidat = CandidateData()
+
+# Modèle pour la requête
+class CommandRequest(BaseModel):
+    query: str  # La réponse ou question du candidat
 
 # Variable globale pour suivre la dernière question posée
 last_question = None
@@ -90,9 +41,11 @@ last_question = None
 @app.post("/endpoint")
 async def process_command(request: CommandRequest):
     global last_question
+
     query = request.query
     if query == "None":
         query = None
+    
     # # Obtenir la réponse et la prochaine question
     response, question = chat.interview(query)
 
@@ -104,7 +57,34 @@ async def process_command(request: CommandRequest):
     last_question = question
     print(Candidat.interview_log)
     Candidat.saveinterview()
+
     return {"response": response, "next_question": question}
+
+
+class Evaluation(BaseModel):
+    id: int
+    question: str
+    reponse_candidat: str
+    Score: str
+    Feedback: str
+    KeyImprovements: List[str]
+
+# Endpoint pour récupérer les évaluations
+@app.get("/api/evaluation/endpoint/interview", response_model=List[Evaluation])
+async def get_evaluations_interview():
+    evaluations=Candidat.get_evaluations()
+    print(evaluations)
+    if not evaluations:
+        raise HTTPException(status_code=404, detail="Aucune évaluation disponible.")
+    return evaluations
+
+
+
+class CalculerScoresResponse(BaseModel):
+    general_pourcentage: int
+    quiz_pourcentage: float
+    evaluation_pourcentage: float
+    
 
 # Route GET pour renvoyer les résultats
 @app.get("/api/calculer-scores", response_model=CalculerScoresResponse)
@@ -117,6 +97,14 @@ async def obtenir_scores():
         print(f"Erreur lors de l'obtention des scores : {e}")
         raise HTTPException(status_code=500, detail=f"Erreur interne : {str(e)}")
     
+    
+
+
+class InfoInter(BaseModel):
+    role_job: str
+    interviewer: str
+   
+
 # Route GET pour renvoyer les résultats
 @app.get("/api/InfoInter", response_model=InfoInter)
 async def obtenir_InfoInter():
@@ -127,6 +115,14 @@ async def obtenir_InfoInter():
     except Exception as e:
         print(f"Erreur lors de l'obtention des scores : {e}")
         raise HTTPException(status_code=500, detail=f"Erreur interne : {str(e)}")
+
+
+
+
+class Question(BaseModel):
+    question: str
+    reponse_candidat: str
+    bonne_reponse: str
     
 @app.get("/api/evaluation/quiz/feed/endpoint", response_model=List[Question])
 async def get_evaluations_quiz():
@@ -134,6 +130,32 @@ async def get_evaluations_quiz():
     if not eval:
         raise HTTPException(status_code=404, detail="Aucune évaluation disponible.")
     return eval
+
+
+class scoreendpoind(BaseModel):
+    candidat: dict
+    job: dict
+    test_quiz: dict
+    interview: dict
+    
+@app.get("/api/evaluation/score/endpoint",response_model=scoreendpoind)
+async def get_evaluationsscore():
+    score = {
+        "jobrole": "Manager",
+        "interviewer": "Farya",
+        "quiz_mod": "10.0",
+    }
+
+    # Vérifier si le score contient les informations nécessaires
+    if not score.get("jobrole") or not score.get("interviewer") or not score.get("quiz_mod"):
+        raise HTTPException(status_code=404, detail="Aucune évaluation disponible.")
+    
+    return score
+
+
+# Modèle pour valider les données entrantes
+class InterviewerChoice(BaseModel):
+    interviewer_number: str # Numéro de l'intervieweur
 
 # Route pour accepter le choix de l'intervieweur
 @app.post("/api/interview/choose-interviewer")
@@ -148,6 +170,10 @@ async def choose_interviewer(choice: InterviewerChoice):
         "interviewer": choice.interviewer_number
     }
 
+
+class TimeData(BaseModel):
+    remaining_time: int
+
 @app.post("/api/quiz/save-end-time")
 async def save_end_time(data: TimeData):
     """
@@ -158,9 +184,13 @@ async def save_end_time(data: TimeData):
     # Ajoutez votre logique pour sauvegarder ces données
     # Exemple : enregistrez dans une base de données ou un fichier
     print(f"Temps restant reçu : {remaining_time} secondes")
+    
     # Réponse API
     return {"message": "Temps enregistré avec succès", "remaining_time": remaining_time}
 
+
+class TimeData2(BaseModel):
+    remaining_time: str
 
 @app.post("/api/quiz/save-end-time_interview")
 async def save_end_time_interview(data: TimeData2):
@@ -176,6 +206,12 @@ async def save_end_time_interview(data: TimeData2):
     # Réponse API
     return {"message": "Temps enregistré avec succès", "remaining_time": remaining_time}
 
+# Modèle Pydantic pour valider les données reçues
+class QuizAnswer(BaseModel):
+    question: str
+    reponse_candidat: str
+    bonne_reponse: str
+
 
 @app.post("/api/quiz/save-answer")
 async def save_quiz_answer(answer: QuizAnswer):
@@ -190,6 +226,14 @@ async def save_quiz_answer(answer: QuizAnswer):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
     
+
+# Modèle de la requête pour recevoir les données
+class JobQuery(BaseModel):
+    title: str
+    description: str
+    name_company: str
+    
+
 
 @app.post("/api/quiz/endpoint")
 async def receive_job_query(query: JobQuery):
@@ -210,11 +254,13 @@ async def receive_job_query(query: JobQuery):
         # Gérer les erreurs imprévues
         raise HTTPException(status_code=500, detail=f"Erreur interne du serveur : {str(e)}")
 
+
+
 # Route pour servir le fichier HTML
 @app.get("/", response_class=HTMLResponse)
 async def read_index():
     # Chemin vers le fichier index.html
-    html_path = Path("static\\templates\\home.html")
+    html_path = Path(__file__).parent / "static" / "templates" / "home.html"
     if html_path.exists():
         html_content = html_path.read_text(encoding="utf-8")
         return HTMLResponse(content=html_content)
@@ -225,7 +271,7 @@ async def read_index():
 @app.get("/about", response_class=HTMLResponse)
 async def read_index():
     # Chemin vers le fichier index.html
-    html_path = Path("static\\templates\\about.html")
+    html_path = Path(__file__).parent / "static" / "templates" / "about.html"
     if html_path.exists():
         html_content = html_path.read_text(encoding="utf-8")
         return HTMLResponse(content=html_content)
@@ -236,7 +282,7 @@ async def read_index():
 @app.get("/how", response_class=HTMLResponse)
 async def read_index():
     # Chemin vers le fichier index.html
-    html_path = Path("static\\templates\\how.html")
+    html_path = Path(__file__).parent / "static" / "templates" / "how.html"
     if html_path.exists():
         html_content = html_path.read_text(encoding="utf-8")
         return HTMLResponse(content=html_content)
@@ -247,7 +293,7 @@ async def read_index():
 @app.get("/next", response_class=HTMLResponse)
 async def read_index():
     # Chemin vers le fichier index.html
-    html_path = Path("static\\templates\\next.html")
+    html_path = Path(__file__).parent / "static" / "templates" / "next.html"
     if html_path.exists():
         html_content = html_path.read_text(encoding="utf-8")
         return HTMLResponse(content=html_content)
@@ -257,7 +303,7 @@ async def read_index():
 @app.get("/start", response_class=HTMLResponse)
 async def read_index():
     # Chemin vers le fichier index.html
-    html_path = Path("static\\templates\\start.html")
+    html_path = Path(__file__).parent / "static" / "templates" / "start.html"
     if html_path.exists():
         html_content = html_path.read_text(encoding="utf-8")
         return HTMLResponse(content=html_content)
@@ -269,7 +315,7 @@ async def read_index():
 async def read_index():
     Candidat.calculer_et_stocker_score()
     # Chemin vers le fichier index.html
-    html_path = Path("static\\templates\\interviwer.html")
+    html_path = Path(__file__).parent / "static" / "templates" / "interviwer.html"
     if html_path.exists():
         html_content = html_path.read_text(encoding="utf-8")
         return HTMLResponse(content=html_content)
@@ -280,7 +326,7 @@ async def read_index():
 async def read_index():
     Candidat.update_interview_evaluations(chat.evaluate())
     # Chemin vers le fichier index.html
-    html_path = Path("static\\templates\\congrate_page.html")
+    html_path = Path(__file__).parent / "static" / "templates" / "congrate_page.html"
     if html_path.exists():
         html_content = html_path.read_text(encoding="utf-8")
         return HTMLResponse(content=html_content)
@@ -289,13 +335,13 @@ async def read_index():
 
 @app.get("/interview_page", response_class=HTMLResponse)
 async def read_index():
-    html_path = Path("static\\templates\\interview_page.html")
+   
+    html_path = Path(__file__).parent / "static" / "templates" / "interview_page.html"
     if html_path.exists():
         html_content = html_path.read_text(encoding="utf-8")
         return HTMLResponse(content=html_content)
     return HTMLResponse(content="<h1>Fichier non trouvé</h1>", status_code=404)
 
 
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+# if __name__ == "__main__":
+#     uvicorn.run(app, host="127.0.0.1", port=8000)

@@ -114,7 +114,7 @@ if (!window.SpeechRecognition) {
                     texts.appendChild(replyElement);
 
 
-                    if (reply.toLowerCase().includes("end of the interview.")||reply.toLowerCase().includes("end of the interview")) {
+                    if (reply.toLowerCase().includes("end interview")||reply.toLowerCase().includes("end the interview")) {
                         recognition.stop();
                         isRecognizing = false;
                         speechSynthesis.cancel();
@@ -214,6 +214,14 @@ if (!window.SpeechRecognition) {
 
             const data = await response.json();
             const reply = data.response || "Aucune réponse disponible.";
+
+            if (reply.toLowerCase().includes("end interview")) {
+                stopCamera();
+                clearInterval(timerInterval);
+                sendEndTime2(document.getElementById("duration").value);
+                document.getElementById("finish").disabled = false;
+                document.getElementById("finish").style.opacity = 1;
+            }
 
             const replyElement = document.createElement("p");
             replyElement.classList.add("reply");

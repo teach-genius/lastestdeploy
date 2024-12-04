@@ -18,6 +18,7 @@ async function loadQuestions() {
     // Vérification si les données nécessaires existent
     if (!title || !description || !name_company) {
         console.error('Certains champs requis manquent dans le localStorage.');
+        document.getElementById("loader").style.display = "none";
         return;
     }
 
@@ -28,48 +29,58 @@ async function loadQuestions() {
         name_company: name_company
     };
 
+    let questions = [];
     try {
-        // Envoyer la requête POST
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestData) // Convertir l'objet en JSON
-        });
+        while (questions.length <= 1) {
+            try {
+                // Envoyer la requête POST
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData) // Convertir l'objet en JSON
+                });
 
-        // Vérifier si la réponse est correcte
-        if (!response.ok) {
-            throw new Error(`Erreur lors de la récupération des questions : ${response.statusText}`);
+                // Vérifier si la réponse est correcte
+                if (!response.ok) {
+                    throw new Error(`Erreur lors de la récupération des questions : ${response.statusText}`);
+                }
+
+                // Parser la réponse en JSON
+                const responseData = await response.json();
+
+                // Vérifier que les données renvoyées par l'API sont valides
+                if (!responseData || !Array.isArray(responseData.data)) {
+                    throw new Error('Le format de réponse de l’API est invalide.');
+                }
+
+                // Assigner les questions
+                questions = responseData.data;
+
+                if (questions.length === 0) {
+                    console.warn('Aucune question reçue de l’API. Nouvelle tentative...');
+                    await new Promise(resolve => setTimeout(resolve, 2000)); // Attente de 2 secondes avant une nouvelle tentative
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement des questions:', error);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Attente de 2 secondes avant une nouvelle tentative
+            }
         }
 
-        // Parser la réponse en JSON
-        const responseData = await response.json();
+        // Charger la première question
+        loadQuestion(0); // Appeler une fonction pour afficher la première question
 
-        // Vérifier que les données renvoyées par l'API sont valides
-        if (!responseData || !Array.isArray(responseData.data)) {
-            throw new Error('Le format de réponse de l’API est invalide.');
-        }
-
-        questions = responseData.data; // Assurez-vous que l'API retourne les questions dans `data`
-
-        // Charger la première question si disponible
-        if (questions.length > 0) {
-            loadQuestion(currentIndex); // Appeler une fonction pour afficher la première question
-
-            // **Une fois les questions chargées, démarrer le quiz**
-            startQuiz();
-        } else {
-            console.warn('Aucune question reçue de l’API.');
-        }
+        // **Une fois les questions chargées, démarrer le quiz**
+        startQuiz();
     } catch (error) {
-        // Gérer les erreurs
-        console.error('Erreur lors du chargement des questions:', error);
+        console.error('Erreur inattendue:', error);
     } finally {
         // **Masquer le loader une fois les questions chargées**
         document.getElementById("loader").style.display = "none";
     }
 }
+
 
 function loadQuestion(index) {
     const questionBox = document.getElementById("questionBox");
@@ -255,5 +266,4 @@ async function sendEndTime(time) {
 
 // Charger les questions au démarrage
 loadQuestions();
-
 

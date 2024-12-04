@@ -7,7 +7,7 @@ from langchain.schema import SystemMessage
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 import re
-from langchain import HuggingFaceHub
+from langchain_community.llms import HuggingFaceHub
 
 class Modele:
     def __init__(self):
@@ -199,7 +199,7 @@ class Modele:
     
     
     def extract_evaluation_info(self,text):
-        try:
+        # try:
             # Rechercher les blocs d'évaluation valides
             evaluations = re.findall(
                 r"Evaluation:\s*1\.\s*Score:\s*(\d+/10)\s*2\.\s*Feedback:\s*(.*?)\s*3\.\s*Key Improvements:\s*((?:\s*-\s*.*\n?)*)",
@@ -232,9 +232,9 @@ class Modele:
 
             return results
 
-        except Exception as e:
-            # Gestion des erreurs
-            return f"Erreur lors de l'extraction des informations : {e}"
+        # except Exception as e:
+        #     # Gestion des erreurs
+        #     return f"Erreur lors de l'extraction des informations : {e}"
 
 
     def evaluate(self,data_json="infos_user.json"):
@@ -281,5 +281,4 @@ class Modele:
         return func
     
             
-
 

@@ -1,4 +1,3 @@
-
 // Fonction pour récupérer les données du quiz
 async function fetchQuizData(apiUrl) {
     try {
@@ -10,18 +9,18 @@ async function fetchQuizData(apiUrl) {
         });
 
         if (!response.ok) {
-            throw new Error(`error connexion : ${response.statusText}`);
+            throw new Error(`Erreur lors de la récupération des questions : ${response.statusText}`);
         }
 
         const responseData = await response.json();
 
         if (!responseData || !Array.isArray(responseData)) {
-            throw new Error('format invalid.');
+            throw new Error('Le format de réponse de l’API est invalide.');
         }
 
         return responseData;
     } catch (error) {
-        console.error('error connexion :', error.message);
+        console.error('Une erreur est survenue lors de la récupération des données :', error.message);
         return null;
     }
 }
@@ -29,11 +28,9 @@ async function fetchQuizData(apiUrl) {
 
 
 
-// Fonction pour Viewr chaque question avec un bouton pour les détails
+// Fonction pour afficher chaque question avec un bouton pour les détails
 function renderQuestions(questions) {
     const quizContainer = document.getElementById('quiz-container');
-    const detailsBtn = document.querySelector('.details-btn')
-    detailsBtn.style.opacity=0.5;
 
     questions.forEach((question, index) => {
         // Conteneur de la question
@@ -44,7 +41,7 @@ function renderQuestions(questions) {
         const questionContent = `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                 <p><strong>Question ${question.id}:</strong> ${question.question}</p>
-                <button class="details-btn" data-id="${index}">View détails</button>
+                <button class="details-btn" data-id="${index}">Afficher les détails</button>
             </div>
             <div class="question-details" id="details-${index}" style="display: none; flex-direction: column; margin-top: 10px; gap: 5px;">
                 <p><strong>Your Answer:</strong> ${question.reponse_candidat || 'No answer provided'}</p>
@@ -68,10 +65,10 @@ function renderQuestions(questions) {
             // Basculer l'affichage des détails
             if (detailsDiv.style.display === 'none' || detailsDiv.style.display === '') {
                 detailsDiv.style.display = 'flex';
-                detailsBtn.textContent = 'hide details';
+                detailsBtn.style.opacity=1;
             } else {
                 detailsDiv.style.display = 'none';
-                detailsBtn.textContent = 'view details ';
+                detailsBtn.style.opacity=0.5;
             }
         });
 
@@ -83,13 +80,13 @@ function renderQuestions(questions) {
 // URL de l'API
 const apiUrl_interview = 'http://127.0.0.1:8000/api/evaluation/endpoint/interview';
 
-// Récupérer les données et les Viewr
+// Récupérer les données et les afficher
 fetchQuizData(apiUrl_interview).then(questions => {
     if (questions) {
         renderQuestions(questions);
     } else {
         const quizContainer = document.getElementById('quiz-container');
-        quizContainer.innerHTML = '<p>None questions.</p>';
+        quizContainer.innerHTML = '<p>Aucune question n’a été récupérée.</p>';
     }
 });
 
@@ -118,7 +115,7 @@ async function fetchQuizData2(apiUrl) {
         });
 
         if (!response.ok) {
-            throw new Error(`error connexion : ${response.statusText}`);
+            throw new Error(`Erreur lors de la récupération des scores : ${response.statusText}`);
         }
 
         const responseData = await response.json();
@@ -129,12 +126,12 @@ async function fetchQuizData2(apiUrl) {
             !responseData.hasOwnProperty("quiz_pourcentage") ||
             !responseData.hasOwnProperty("evaluation_pourcentage")
         ) {
-            throw new Error("error connexion");
+            throw new Error("La réponse de l'API ne contient pas les données nécessaires.");
         }
 
         return responseData; // Renvoyer l'objet JSON
     } catch (error) {
-        console.error('error connexion :', error.message);
+        console.error('Une erreur est survenue lors de la récupération des données :', error.message);
         return null;
     }
 }
@@ -157,13 +154,13 @@ function renderCalculerScore(scores) {
 // URL de l'API
 const url_calculer_scores = 'http://127.0.0.1:8000/api/calculer-scores';
 
-// Récupérer les données et les viewr
+// Récupérer les données et les afficher
 document.addEventListener("DOMContentLoaded", function () {
     fetchQuizData2(url_calculer_scores).then(scores => {
         if (scores) {
             renderCalculerScore(scores);
         } else {
-            alert("error load score");
+            alert("Les scores sont introuvables.");
         }
     });
 });
@@ -191,13 +188,13 @@ function startTimer(maxValue) {
 
 
 const url_InfoInter = 'http://127.0.0.1:8000/api/InfoInter';
-// Récupérer les données et les viewr
+// Récupérer les données et les afficher
 document.addEventListener("DOMContentLoaded", function () {
     fetchQuizData3(url_InfoInter ).then(scores => {
         if (scores) {
             renderurl_InfoInter(scores);
         } else {
-            alert("error connexion");
+            alert("Les InfoInter sont introuvables.");
         }
     });
 });
@@ -259,17 +256,17 @@ async function fetchQuizData3(apiUrl) {
 
 const apiUrl3 = 'http://127.0.0.1:8000/api/evaluation/quiz/feed/endpoint';
 
-// Récupérer les données et les Viewr
+// Récupérer les données et les afficher
 fetchQuizData(apiUrl3).then(questions => {
     if (questions) {
         renderQuestions3(questions);
     } else {
         const quizContainer = document.getElementById('quiz_main-container');
-        quizContainer.innerHTML = '<p>None data receive</p>';
+        quizContainer.innerHTML = '<p>Aucune question n’a été récupérée.</p>';
     }
 });
 
-// Fonction pour View  questions du quiz
+// Fonction pour afficher les questions du quiz
 function renderQuestions3(questions) {
     const quizContainer = document.getElementById('quiz_main-container');
 
@@ -282,8 +279,7 @@ function renderQuestions3(questions) {
         const questionContent = `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                 <p><strong>Question:</strong> ${question.question}</p>
-                <button class="details-btn" data-id="${index}" >
-                </button>
+                <button class="details-btn" data-id="${index}">Afficher les détails</button>
             </div>
             <div class="question-details" id="details-${index}" style="display: none; flex-direction: column; margin-top: 10px; gap: 5px;">
                 <p><strong>Your Answer:</strong> ${question.reponse_candidat || 'No answer provided'}</p>
@@ -295,7 +291,6 @@ function renderQuestions3(questions) {
         // Ajouter l'écouteur sur le bouton "Détails"
         const detailsBtn = questionDiv.querySelector('.details-btn');
         const detailsDiv = questionDiv.querySelector(`#details-${index}`);
-        const image = detailsBtn.querySelector('img');
 
         detailsBtn.addEventListener('click', () => {
             // Basculer l'affichage des détails
@@ -312,4 +307,3 @@ function renderQuestions3(questions) {
         quizContainer.appendChild(questionDiv);
     });
 }
-
