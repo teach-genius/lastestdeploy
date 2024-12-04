@@ -34,7 +34,7 @@ class Modele:
     
     def generate_qcm_question(self):
         load_dotenv()
-        google_api_key = os.environ.get("GOOGLE_API_KEY2")
+        google_api_key = "AIzaSyBvhnSEGlPrYLAEZFILchKi9922CtkXBcs" #os.environ.get("GOOGLE_API_KEY2")
         if not google_api_key:
             raise ValueError("GOOGLE_API_KEY is not set in the environment variables.")
         
@@ -135,7 +135,7 @@ class Modele:
 
     def initialize_conversation(self):
         load_dotenv()
-        google_api_key = os.environ.get("GOOGLE_API_KEY1")
+        google_api_key = "AIzaSyBmyPUMaifrSubsSgBx_FufcN78Vlzwzxc" #os.environ.get("GOOGLE_API_KEY1")
         if not google_api_key:
             raise ValueError("GOOGLE_API_KEY2 is not set in the environment variables.")
 
@@ -239,7 +239,7 @@ class Modele:
 
     def evaluate(self,data_json="infos_user.json"):
         load_dotenv()
-        HF_api_key = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+        HF_api_key = "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"#os.environ.get("HUGGINGFACEHUB_API_TOKEN")
         template="""
             You are an AI hiring evaluator specializing in assessing candidates for the {job_title}. Your task is to evaluate a candidate's responses from an interview. Assess their answers for technical accuracy, clarity, relevance, and depth of knowledge.
 
