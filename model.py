@@ -236,49 +236,70 @@ class Modele:
         #     # Gestion des erreurs
         #     return f"Erreur lors de l'extraction des informations : {e}"
 
+    def evaluate(self, data_json="infos_user.json"):
+        # Charger les variables d'environnement
+        
+        HF_api_key = "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"
+        
+        # Template pour évaluer les réponses
+        template = """
+        You are an AI hiring evaluator specializing in assessing candidates for the {job_title}. Your task is to evaluate a candidate's responses from an interview. Assess their answers for technical accuracy, clarity, relevance, and depth of knowledge.
 
-    def evaluate(self,data_json="infos_user.json"):
-        load_dotenv()
-        HF_api_key = "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"#os.environ.get("HUGGINGFACEHUB_API_TOKEN")
-        template="""
-            You are an AI hiring evaluator specializing in assessing candidates for the {job_title}. Your task is to evaluate a candidate's responses from an interview. Assess their answers for technical accuracy, clarity, relevance, and depth of knowledge.
+        Question: {question}
+        Candidate's Answer: {answer}
 
-            Question: {question}
-            Candidate's Answer: {answer}
+        Instructions:
+        1. Provide a score out of 10 for the answer based on the evaluation criteria.
+        2. Write in a maximum 3-line paragraph with detailed feedback that highlights strengths and weaknesses in the answer, and do not address the candidate by their names.
+        3. Suggest 3 key improvements in bullet points.
 
-            Instructions:
-            1. Provide a score out of 10 for the answer based on the evaluation criteria.
-            2. Write in maximum 3 lines paragraph with detailed feedback that highlights strengths and weaknesses in the answer and do not address the candidate by their names.
-            3. Suggest 3 key improvements in bullet points.
-
-            Output Format:
-            ---------------------------------
-            Evaluation:
-            1. Score: X/10
-            2. Feedback: [Detailed feedback]
-            3. Key Improvements:
-            - Improvement 1
-            - Improvement 2
-            - Improvement 3
-            ---------------------------------
+        Output Format:
+        ---------------------------------
+        Evaluation:
+        1. Score: X/10
+        2. Feedback: [Detailed feedback]
+        3. Key Improvements:
+        - Improvement 1
+        - Improvement 2
+        - Improvement 3
+        ---------------------------------
         """
 
-        prompt=PromptTemplate(template=template,input_variables=["job_title","question","answer"])
-        llm=HuggingFaceHub(repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",model_kwargs={"temperature":0.5,"max_new_tokens":500},huggingfacehub_api_token=HF_api_key)
+        # Préparer le modèle LLM
+        prompt = PromptTemplate(template=template, input_variables=["job_title", "question", "answer"])
+        llm = HuggingFaceHub(
+            repo_id="mistralai/Mixtral-8x7B-Instruct-v0.1",
+            model_kwargs={"temperature": 0.5, "max_new_tokens": 500},
+            huggingfacehub_api_token=HF_api_key
+        )
 
+        # Charger les données JSON
+        try:
+            with open(data_json, 'r') as file:
+                json_data = json.load(file)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"The file '{data_json}' was not found.")
+        except json.JSONDecodeError:
+            raise ValueError(f"The file '{data_json}' contains invalid JSON.")
 
-        with open(data_json, 'r') as file:
-            json_data = json.load(file)
+        # Parcourir les questions et réponses
+        questions_list = json_data.get("interview", {}).get("questions", [])
+        evaluations = []
 
-        questions_list = json_data["interview"]["questions"]
-        func=[]
         for entry in questions_list:
             question = entry.get("question", "No question provided")
             response = entry.get("response", "No response provided")
-            r=llm.invoke(prompt.format(job_title=self.job, question=question, answer=response))
-            func.append(self.extract_evaluation_info(r))
 
-        return func
+            # Vérifier si la réponse est une chaîne de caractères
+            if isinstance(response, str):
+                formatted_prompt = prompt.format(job_title=self.job_title, question=question, answer=response)
+                try:
+                    result = llm.invoke(formatted_prompt)
+                    evaluations.append(self.extract_evaluation_info(result))
+                except Exception as e:
+                    evaluations.append({"error": f"Error during evaluation: {str(e)}"})
+
+        return evaluations
     
             
 

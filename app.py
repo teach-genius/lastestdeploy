@@ -343,5 +343,5 @@ async def read_index():
     return HTMLResponse(content="<h1>Fichier non trouvé</h1>", status_code=404)
 
 
-# if __name__ == "__main__":
-#     uvicorn.run(app, host="127.0.0.1", port=8000)
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)

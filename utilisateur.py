@@ -33,13 +33,25 @@ class CandidateData:
         except (FileNotFoundError, json.JSONDecodeError):
             self.save_to_file(filename)
 
-    def add_question_interview(self, question, response):
-        """Ajouter une question et une réponse à l'interview."""
-        self.data["interview"]["questions"].append({
-            "question": question,
-            "reponse_candidat": response
-        })
-        self.save_to_file(path_file)
+    def add_question_interview(self, question, response, path_file="infos_user.json"):
+        """
+        Ajouter une question et une réponse à l'interview.
+
+        :param question: La question posée au candidat.
+        :param response: La réponse du candidat.
+        :param path_file: Le chemin du fichier JSON où les données seront sauvegardées.
+        """
+        # Vérifier si la réponse est valide
+        if response is not None and str(response).lower() != "null":
+            # Ajouter la question et la réponse à la liste des questions d'interview
+            self.data["interview"]["questions"].append({
+                "question": question,
+                "response": response  # Correction du nom de clé : uniformisation avec "response"
+            })
+
+            # Sauvegarder les modifications dans le fichier
+            self.save_to_file(path_file)
+        
 
     def saveinterview(self):
         """Sauvegarder les questions de l'interview loggées."""
@@ -72,15 +84,17 @@ class CandidateData:
         self.save_to_file(path_file)
 
     def add_evaluation(self, context, score, feedback, improvements):
-        """Ajouter une évaluation au test ou à l'interview."""
-        if context not in ["test_quiz", "interview"]:
-            raise ValueError("Le contexte doit être 'test_quiz' ou 'interview'.")
-        self.data[context]["evaluations"].append({
-            "Score": score,
-            "Feedback": feedback,
-            "Key Improvements": improvements
-        })
-        self.save_to_file(path_file)
+        if(len(improvements)==3):
+            """Ajouter une évaluation au test ou à l'interview."""
+            if context not in ["test_quiz", "interview"]:
+                raise ValueError("Le contexte doit être 'test_quiz' ou 'interview'.")
+            eval={
+                "Score": score,
+                "Feedback": feedback,
+                "Key Improvements": improvements
+            }
+            self.data[context]["evaluations"].append(eval)
+            self.save_to_file(path_file)
 
     def calculer_et_stocker_score(self):
         """Calculer le score du quiz et le stocker."""
