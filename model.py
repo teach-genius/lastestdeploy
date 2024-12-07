@@ -236,10 +236,7 @@ class Modele:
 
             return results
 
-        # except Exception as e:
-        #     # Gestion des erreurs
-        #     return f"Erreur lors de l'extraction des informations : {e}"
-
+       
     def evaluate(self, data_json="infos_user.json"):
         # Charger les variables d'environnement
         

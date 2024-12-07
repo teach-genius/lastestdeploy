@@ -161,8 +161,7 @@ class InterviewerChoice(BaseModel):
 @app.post("/api/interview/choose-interviewer")
 async def choose_interviewer(choice: InterviewerChoice):
     chat.add_interviewer(choice.interviewer_number)
-    print(choice.interviewer_number)
-    Candidat.update_interviewer(choice.interviewer_number)
+    Candidat.update_role_and_interviewer(chat.job_title,choice.interviewer_number)
     print(f"intervieweur choisi : {choice.interviewer_number}")
 
     return {
@@ -176,16 +175,9 @@ class TimeData(BaseModel):
 
 @app.post("/api/quiz/save-end-time")
 async def save_end_time(data: TimeData):
-    """
-    Enregistrer le temps restant ou initial à la fin du quiz.
-    """
     remaining_time = data.remaining_time
     Candidat.set_test_completion_time(remaining_time)
-    # Ajoutez votre logique pour sauvegarder ces données
-    # Exemple : enregistrez dans une base de données ou un fichier
     print(f"Temps restant reçu : {remaining_time} secondes")
-    
-    # Réponse API
     return {"message": "Temps enregistré avec succès", "remaining_time": remaining_time}
 
 
@@ -194,16 +186,9 @@ class TimeData2(BaseModel):
 
 @app.post("/api/quiz/save-end-time_interview")
 async def save_end_time_interview(data: TimeData2):
-    """
-    Enregistrer le temps de l'interview .
-    """
     remaining_time = data.remaining_time
-    Candidat.update_interview_time(remaining_time)
-    # Ajoutez votre logique pour sauvegarder ces données
-    # Exemple : enregistrez dans une base de données ou un fichier
+    Candidat.set_interview_completion_time(remaining_time)
     print(f"Temps restant reçu : {remaining_time} secondes")
-    
-    # Réponse API
     return {"message": "Temps enregistré avec succès", "remaining_time": remaining_time}
 
 # Modèle Pydantic pour valider les données reçues
@@ -215,19 +200,14 @@ class QuizAnswer(BaseModel):
 
 @app.post("/api/quiz/save-answer")
 async def save_quiz_answer(answer: QuizAnswer):
-    # Validation automatique grâce à Pydantic
     try:
-        Candidat.add_quiz_answer(
-            question=answer.question,
-            reponse_candidat=answer.reponse_candidat,
-            bonne_reponse=answer.bonne_reponse
-        )
+        Candidat.add_quiz_answer(question=answer.question,
+                                 reponse=answer.reponse_candidat,
+                                 good_response=answer.bonne_reponse)
         return {"message": "Answer saved successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
     
-
-# Modèle de la requête pour recevoir les données
 class JobQuery(BaseModel):
     title: str
     description: str
@@ -240,14 +220,11 @@ async def receive_job_query(query: JobQuery):
     try:
         print("request give qcm")
         chat.add_infos_job(query.title, query.description, query.name_company)
-        Candidat.update_role(query.title)
-        # Générer les questions
         questions = chat.generate_qcm_question()# exampleQuestions #chat.generate_qcm_question()#
         Candidat.add_job_info(query.title, query.description, query.name_company)
         if not questions:
             return {"message": "Aucune question générée", "data": []}
 
-        # Retourner les questions
         return {"message": "Questions générées avec succès!", "data": questions}
 
     except Exception as e:

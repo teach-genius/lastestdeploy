@@ -1,45 +1,30 @@
 import json
-from datetime import datetime
-from typing import List, Dict
-
-
-path_file = "infos_user.json"
-
-
-class CandidateData:
-    def __init__(self, role="", interviewer=""):
-        self.interview_log = []
-        self.data = {
-            "candidat": {"role": role, "interviewer": interviewer},
+path = "infos_user.json"
+data = {
+            "candidat": {"role": "", "interviewer": ""},
             "job": {"titre": "", "description": "", "campagne": ""},
             "test_quiz": {
                 "questions": [],
                 "temps_fin_test": "",
-                "evaluations": []  # Évaluations liées au test/quiz
+                "evaluations": [] 
             },
             "interview": {
                 "questions": [],
+                
                 "temps_fin_interview": "",
+                
                 "evaluations": []
             },
+    
         }
-        self.initialize_file(path_file)
 
-    def initialize_file(self, filename):
-        """Initialiser le fichier JSON si nécessaire."""
-        try:
-            with open(filename, "r", encoding="utf-8") as f:
-                json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            self.save_to_file(filename)
-
+class CandidateData:
+    def __init__(self):
+        self.interview_log = []
+        update_data(path,data)
+        
     def add_question_interview(self, question, response):
-        """Ajouter une question et une réponse à l'interview."""
-        self.data["interview"]["questions"].append({
-            "question": question,
-            "reponse_candidat": response
-        })
-        self.save_to_file(path_file)
+        add_question_interview(path,load_data(path),question,response)
 
     def saveinterview(self):
         """Sauvegarder les questions de l'interview loggées."""
@@ -47,240 +32,184 @@ class CandidateData:
             self.add_question_interview(item["question"], item["response"])
         self.interview_log.clear()
 
-    def add_job_info(self, titre, description, campagne):
-        """Ajouter des informations sur le job."""
-        self.data["job"].update({"titre": titre, "description": description, "campagne": campagne})
-        self.save_to_file(path_file)
+    def add_job_info(self,titre,description,compagnie):
+        update_job_info(path,load_data(path),titre,description,compagnie)
 
-    def add_quiz_answer(self, question, reponse_candidat, bonne_reponse):
-        """Ajouter une réponse au quiz."""
-        self.data["test_quiz"]["questions"].append({
-            "question": question,
-            "reponse_candidat": reponse_candidat,
-            "bonne_reponse": bonne_reponse
-        })
-        self.save_to_file(path_file)
+    def add_quiz_answer(self, question,reponse,good_response):
+        add_quiz_questions(path,load_data(path),question,reponse,good_response)
 
-    def set_test_completion_time(self, temps_fin=None):
-        """Ajouter le temps de fin du test."""
-        self.data["test_quiz"]["temps_fin_test"] = temps_fin or datetime.utcnow().isoformat()
-        self.save_to_file(path_file)
+    def set_test_completion_time(self, temps_fin):
+        update_end_time_quiz(path,load_data(path),temps_fin)
 
-    def set_interview_completion_time(self, temps_fin=None):
-        """Ajouter le temps de fin de l'interview."""
-        self.data["interview"]["temps_fin_interview"] = temps_fin or datetime.utcnow().isoformat()
-        self.save_to_file(path_file)
+    def set_interview_completion_time(self, temps_fin):
+        update_time_interview(path,load_data(path),temps_fin)
 
-    def add_evaluation(self, context, score, feedback, improvements):
-        """Ajouter une évaluation au test ou à l'interview."""
-        if context not in ["test_quiz", "interview"]:
-            raise ValueError("Le contexte doit être 'test_quiz' ou 'interview'.")
-        self.data[context]["evaluations"].append({
-            "Score": score,
-            "Feedback": feedback,
-            "Key Improvements": improvements
-        })
-        self.save_to_file(path_file)
+    def add_evaluation(self,score, feedback, improvements):
+        add_evaluation(path,load_data(path),score, feedback, improvements)
 
     def calculer_et_stocker_score(self):
-        """Calculer le score du quiz et le stocker."""
-        questions = self.data["test_quiz"]["questions"]
-        bonnes_reponses = sum(1 for q in questions if q["reponse_candidat"] == q["bonne_reponse"])
-        total_questions = len(questions)
-        pourcentage = (bonnes_reponses / total_questions) * 100 if total_questions else 0
-        self.data["test_quiz"]["evaluations"] = {
-            "score": bonnes_reponses,
-            "pourcentage": round(pourcentage, 2)
-        }
-        self.save_to_file(path_file)
+        calculer_et_stocker_score_quiz(path,load_data(path))
 
-    def save_to_file(self, filename):
-        """Sauvegarder les données dans un fichier JSON."""
-        with open(filename, "w", encoding="utf-8") as f:
-            json.dump(self.data, f, indent=4, ensure_ascii=False)
-
-     
-
-    def update_interview_time(self, update_time: str) -> bool:
-        """
-        Met à jour la valeur de 'temps_fin_interview' dans le fichier JSON.
-
-        Args:
-            update_time (str): La nouvelle valeur pour 'temps_fin_interview'.
-
-        Returns:
-            bool: True si la mise à jour a réussi, False sinon.
-        """
-        return self._update_json_field("interview", "temps_fin_interview", update_time)
-
-    def update_interview_evaluations(self, evaluations: list) -> bool:
-        """
-        Met à jour les évaluations de l'interview dans le fichier JSON.
-
-        Args:
-            evaluations (list): La liste des évaluations à mettre à jour.
-
-        Returns:
-            bool: True si la mise à jour a réussi, False sinon.
-        """
-        return self._update_json_field("interview", "evaluations", evaluations)
-
-    def _update_json_field(self, section: str, field: str, value) -> bool:
-        """
-        Méthode générique pour mettre à jour un champ dans une section donnée du fichier JSON.
-
-        Args:
-            section (str): La section à modifier (ex: 'interview').
-            field (str): Le champ à mettre à jour (ex: 'temps_fin_interview').
-            value: La nouvelle valeur à attribuer au champ.
-
-        Returns:
-            bool: True si la mise à jour a réussi, False sinon.
-        """
-        try:
-            # Lire le fichier JSON
-            with open(path_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            # Vérifier si la section et le champ existent
-            if section not in data:
-                print(f"Erreur : La section '{section}' est manquante dans le fichier '{path_file}'.")
-                return False
-
-            # Mettre à jour le champ
-            data[section][field] = value
-
-            # Sauvegarder les modifications dans le fichier JSON
-            with open(path_file, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4, ensure_ascii=False)
-
-            print(f"{field} mis à jour avec succès dans la section '{section}'.")
-            return True
-
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            print(f"Erreur : {str(e)}")
-            return False
-        
+    def update_interview_time(self, update_time):
+       update_time_interview(path,load_data(path),update_time)
  
-    def update_role(self,role):
-        path =path_file
-        """
-        Met à jour le rôle dans la structure de données pour le chemin donné.
-
-        :param path: Chemin d'accès dans le dictionnaire (ex: "candidat")
-        :param role: Le rôle à assigner
-        """
-        if path in self.data:
-            self.data[path]["role"] = role
-            print(f"Le rôle a été mis à jour pour {path} avec la valeur '{role}'.")
-        else:
-            print("Le chemin spécifié n'existe pas dans les données.")
-
-    def update_interviewer(self, interviewer):
-        path =path_file
-        """
-        Met à jour l'intervieweur dans la structure de données pour le chemin donné.
-
-        :param path: Chemin d'accès dans le dictionnaire (ex: "candidat")
-        :param interviewer: Le nom de l'intervieweur
-        """
-        if path in self.data:
-            self.data[path]["interviewer"] = interviewer
-            print(f"L'intervieweur a été mis à jour pour {path} avec la valeur '{interviewer}'.")
-        else:
-            print("Le chemin spécifié n'existe pas dans les données.")
-            
-            
-    
+    def update_role_and_interviewer(self,role,interviewer):
+        update_candidat(path,load_data(path),role,interviewer)
 
     def get_quiz_percentage(self):
-        data=self.load_json()
-        """
-        Récupère le pourcentage du quiz à partir des données JSON.
-        """
-        try:
-            return data['test_quiz']['evaluations']['pourcentage']
-        except KeyError:
-            return "Pourcentage non disponible"
+        return get_evaluation_quiz(load_data(path))["pourcentage"]
     
     def get_quiz_questions(self):
-        data=self.load_json()
-        try:
-            return data['test_quiz']['questions']
-        except KeyError:
-            return "questions non trouvé"
-
-    
-    def load_json(self,file_path=path_file):
-        """
-        Charge un fichier JSON depuis le chemin spécifié et retourne son contenu.
-        """
-        try:
-            with open(file_path, 'r') as file:
-                data = json.load(file)
-            return data
-        except FileNotFoundError:
-            print(f"Le fichier à l'emplacement {file_path} n'a pas été trouvé.")
-            return None
-        except json.JSONDecodeError:
-            print("Erreur lors de la lecture du fichier JSON.")
-            return None
+        return get_questions(load_data(path))
 
     def get_evaluations(self):
-        input_data=self.load_json()
-        evaluations = []
-        
-        # Extraire les questions et évaluations de l'entretien
-        interview_questions = input_data["interview"]["questions"]
-        evaluations_data = input_data["interview"]["evaluations"]
-        
-        # Itération sur les questions et évaluations
-        for idx, (question_data, evaluation_data) in enumerate(zip(interview_questions, evaluations_data)):
-            evaluation = {
-                "id": idx + 1,  # ID basé sur l'index
-                "question": question_data["question"],  # La question posée
-                "reponse_candidat": question_data["reponse_candidat"],  # La réponse du candidat
-                "Score": evaluation_data[0]["Score"],  # Le score
-                "Feedback": evaluation_data[0]["Feedback"],  # Le feedback
-                "KeyImprovements": evaluation_data[0]["Key Improvements"]  # Les améliorations suggérées
-            }
-            evaluations.append(evaluation)
-        return evaluations
+        get_evaluations(load_data(path))
             
     def calculer_scores(self):
-        input_data=self.load_json()
-        # Récupération des scores de l'entretien et du quiz
-        scores_entretien = input_data['interview']['evaluations']
-        score_quiz = input_data['test_quiz']['evaluations']['pourcentage']
-        
-        # Calcul de la moyenne des scores d'entretien
-        total_scores_entretien = 0
-        total_questions_entretien = len(scores_entretien)
-        
-        for evaluation in scores_entretien:
-            score = int(evaluation[0]["Score"].split("/")[0])  # On récupère la première partie du score (avant le '/')
-            total_scores_entretien += score
-        
-        # Calcul de la moyenne des scores de l'entretien en pourcentage
-        moyenne_entretien = (total_scores_entretien / (total_questions_entretien * 10)) * 100  # Total maximum de 10 points par question
-        
-        # Calcul de la moyenne générale entre le quiz et l'entretien
-        moyenne_generale = (moyenne_entretien + score_quiz) / 2
-        
-        # Création du dictionnaire de résultat
-        resultats = {
-            "general_pourcentage": int(moyenne_generale),
-            "quiz_pourcentage": score_quiz,
-            "evaluation_pourcentage": moyenne_entretien
-        }
-        
-        return resultats
-        
-
-
-
-
-    def __repr__(self):
-        """Affichage des données pour debug."""
-        return json.dumps(self.data, indent=4, ensure_ascii=False)
+        get_final_scores(load_data(path))
     
+@staticmethod
+def get_final_scores(data):
+    entretiens = get_evaluations(data)
+    score_quiz = get_evaluation_quiz(data)['pourcentage']
+    score = [int(evaluation["score"].split("/")[0]) for evaluation in entretiens].sum()
+    moyenne_entretien = (score/(len(entretiens)*10))*100
+    moyenne_generale = (score_quiz+moyenne_entretien)/2
+    # Création du dictionnaire de résultat
+    resultats = {
+    "general_pourcentage": int(moyenne_generale),
+    "quiz_pourcentage": score_quiz,
+    "evaluation_pourcentage": moyenne_entretien
+    }
+    return resultats
+
+@staticmethod
+def calculer_et_stocker_score_quiz(path,data):
+    questions = data["test_quiz"]["questions"]
+    bonnes_reponses = sum(1 for q in questions if q["reponse_candidat"] == q["bonne_reponse"])
+    total_questions = len(questions)
+    pourcentage = (bonnes_reponses / total_questions) * 100 if total_questions else 0
+    data["test_quiz"]["evaluations"] = {
+        "score": bonnes_reponses,
+        "pourcentage": round(pourcentage, 2)
+    }
+    update_data(path,data)
+    
+@staticmethod
+def get_evaluations(data):
+    return data["interview"]["evaluations"] 
+
+@staticmethod
+def get_questions(data):
+    return data["interview"]["questions"]
+
+@staticmethod
+def get_liste_evaluations(data):
+    return get_evaluations(data)
+
+@staticmethod
+def get_order_evaluations(data):
+    questions = get_questions(data)
+    evaluations = get_liste_evaluations(data)
+    order_evaluations = [{
+        "id":index+1,
+        "question":Q["question"],
+        "reponse":Q["reponse_candidat"],
+        "score":E["Score"],
+        "Feedback":E["Feedback"],
+        "KeyImprovements":[key for key in E["Key Improvements"] if key!=""]
+        
+    } for index,(Q,E) in enumerate(zip(questions,evaluations))]
+    return order_evaluations
+
+@staticmethod
+def get_quiz_questions(data):
+    return data["test_quiz"]["questions"]
+
+@staticmethod
+def get_candidat_info(data):
+    return data["candidat"]
+
+@staticmethod
+def get_job_info(data):
+    return data["job"]
+
+@staticmethod
+def get_evaluation_quiz(data):
+    return data["test_quiz"]["evaluations"]
+
+@staticmethod
+def get_time_interview(data):
+    return  data["interview"]["temps_fin_interview"]
+
+@staticmethod
+def add_question_interview(path,data,question,reponse):
+    info = {
+        "question":question,
+        "reponse_candidat":reponse
+    }
+    data["interview"]["questions"].append(info)
+    update_data(path,data)
+    
+@staticmethod
+def add_quiz_questions(path,data,question,reponse,good_response):
+    info={
+        "question":question,
+        "reponse_candidat":reponse ,
+        "bonne_reponse":good_response
+    }
+    data["test_quiz"]["questions"].append(info)
+    update_data(path,data)
+    
+@staticmethod
+def add_evaluation(path,data,score,feed,keys):
+    info = {
+        "Score":score,
+        "Feedback":feed,
+        "Key Improvements":keys
+    }
+    data["interview"]["evaluations"].append(info)
+    update_data(path,data)
+    
+@staticmethod
+def update_job_info(path,data,titre,description,compagnie):
+    data["job"]["titre"] = titre,
+    data["job"]["description"] = description,
+    data["job"]["campagne"] = compagnie
+    update_data(path,data)
+    
+@staticmethod
+def update_candidat(path,data,role,interviewer):
+    data["candidat"]["role"]=role,
+    data["candidat"]["interviewer"]=interviewer
+    update_data(path,data)
+    
+@staticmethod
+def update_end_time_quiz(path,data,time):
+    data["test_quiz"]["temps_fin_test"]=time
+    update_data(path,data)
+    
+@staticmethod
+def update_evaluation_quiz(path,data,score,pourcentage):
+    info = {
+        "score": score,
+        "pourcentage": pourcentage
+    }
+    data["test_quiz"]["evaluations"]=info
+    update_data(path,data)
+    
+@staticmethod
+def update_time_interview(path,data,time):
+    data["interview"]["temps_fin_interview"]=time
+    update_data(path,data)
+    
+@staticmethod  
+def update_data(path,data):
+    with open(path,"w",encoding="utf-8") as f:
+        json.dump(data,f)
+        
+@staticmethod
+def load_data(path):
+    with open(path,"r",encoding="utf-8") as f:
+        data = json.load(f)
+    return data
