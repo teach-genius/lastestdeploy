@@ -220,15 +220,12 @@ async def receive_job_query(query: JobQuery):
     try:
         print("request give qcm")
         chat.add_infos_job(query.title, query.description, query.name_company)
-        questions = chat.generate_qcm_question()# exampleQuestions #chat.generate_qcm_question()#
+        questions = chat.generate_qcm_question()
         Candidat.add_job_info(query.title, query.description, query.name_company)
         if not questions:
             return {"message": "Aucune question générée", "data": []}
-
         return {"message": "Questions générées avec succès!", "data": questions}
-
     except Exception as e:
-        # Gérer les erreurs imprévues
         raise HTTPException(status_code=500, detail=f"Erreur interne du serveur : {str(e)}")
 
 

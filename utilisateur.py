@@ -68,6 +68,9 @@ class CandidateData:
     def calculer_scores(self):
         get_final_scores(load_data(path))
     
+    def update_interview_evaluations(self,liste):
+        set_evaluations(load_data(path),liste)
+    
 @staticmethod
 def get_final_scores(data):
     entretiens = get_evaluations(data)
@@ -98,6 +101,12 @@ def calculer_et_stocker_score_quiz(path,data):
 @staticmethod
 def get_evaluations(data):
     return data["interview"]["evaluations"] 
+
+@staticmethod
+def set_evaluations(data,liste):
+    data["interview"]["evaluations"] = liste
+    update_data(path,data)
+    
 
 @staticmethod
 def get_questions(data):

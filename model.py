@@ -7,6 +7,7 @@ from langchain.schema import SystemMessage
 from langchain.chains import ConversationChain
 from langchain.memory import ConversationBufferMemory
 import re
+from utilisateur import *
 from langchain_community.llms import HuggingFaceHub
 job_title = None
 class Modele:
@@ -275,28 +276,22 @@ class Modele:
         )
 
         # Charger les données JSON
-        try:
-            with open(data_json, 'r') as file:
-                json_data = json.load(file)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"The file '{data_json}' was not found.")
-        except json.JSONDecodeError:
-            raise ValueError(f"The file '{data_json}' contains invalid JSON.")
-
+        data=load_data("infos_user.json")
+        
         # Parcourir les questions et réponses
-        questions_list = json_data.get("interview", {}).get("questions", [])
+        questions_list = data["interview"]["questions"]
         evaluations = []
 
         for entry in questions_list:
-            question = entry.get("question", "No question provided")
-            response = entry.get("response", "No response provided")
+            question = entry["question"]
+            response = entry["response"]
 
             # Vérifier si la réponse est une chaîne de caractères
             if isinstance(response, str):
                 formatted_prompt = prompt.format(job_title=self.job_title, question=question, answer=response)
                 try:
                     result = llm.invoke(formatted_prompt)
-                    evaluations.append(self.extract_evaluation_info(result))
+                    evaluations.append(self.extract_evaluation_info(result)[0])
                 except Exception as e:
                     evaluations.append({"error": f"Error during evaluation: {str(e)}"})
 
